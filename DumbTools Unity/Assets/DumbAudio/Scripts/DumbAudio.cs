@@ -76,6 +76,21 @@ public class DumbAudio : MonoBehaviour
             if (s != null && s.clip == clip) toStop.Add(s);
         foreach (AudioSource s in toStop) { s.Stop(); ReleaseToPool(s); }
     }
+    
+// play 3d sound
+    public AudioSource Play3DSound(AudioClip clip, float volume = 1.0f, float pitch = 1.0f, Vector3 position = default)
+    {
+        if (clip == null) return null;
+        AudioSource source = _pool.Get();
+        source.clip = clip;
+        source.volume = volume;
+        source.pitch = pitch;
+        source.spatialBlend = 1f;
+        source.transform.position = position;
+        source.Play();
+        StartCoroutine(ReturnToPoolWhenFinished(source, clip.length * (1 / pitch)));
+        return source;
+    }
 
 // random sound from a list
     public AudioSource PlayRandomSound(AudioClip[] clips, float volume = 1.0f, float pitch = 1.0f)
@@ -104,6 +119,20 @@ public class DumbAudio : MonoBehaviour
         if (clips == null || clips.Count == 0) return;
         AudioClip clip = clips[Random.Range(0, clips.Count)];
         PlaySoundOneShot(clip, volume, pitch);
+    }
+    
+    public AudioSource PlayRandom3DSound(AudioClip[] clips, float volume = 1.0f, float pitch = 1.0f, Vector3 position = default)
+    {
+        if (clips == null || clips.Length == 0) return null;
+        AudioClip clip = clips[Random.Range(0, clips.Length)];
+        return Play3DSound(clip, volume, pitch, position);
+    }
+    
+    public AudioSource PlayRandom3DSound(List<AudioClip> clips, float volume = 1.0f, float pitch = 1.0f, Vector3 position = default)
+    {
+        if (clips == null || clips.Count == 0) return null;
+        AudioClip clip = clips[Random.Range(0, clips.Count)];
+        return Play3DSound(clip, volume, pitch, position);
     }
 
 // looping sounds

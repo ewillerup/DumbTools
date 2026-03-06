@@ -3,31 +3,30 @@ using UnityEngine;
 using UnityEngine.Audio;
 
 // plays a clip on loop in a specific area.
-// useful if a scene has many ambient audio sources and you want volume falloff while preserving stereo.
 
-public class AmbientAudioArea : MonoBehaviour
+public class DumbAmbientArea : MonoBehaviour
 {
-	public AudioClip audioClip;
+	[SerializeField] private AudioClip audioClip;
 	[Tooltip("Window > Audio > Audio Mixer")]
-	public AudioMixerGroup mixerGroup;
-	public AudioAreaShape shape = AudioAreaShape.Sphere; // TODO: implement box shape in update loop and serialize me
+	[SerializeField] private AudioMixerGroup mixerGroup;
+	[SerializeField] private AudioAreaShape shape = AudioAreaShape.Sphere; // TODO: implement box shape in update loop and serialize me
 	[Tooltip("The distance where ambience is loudest.")]
-	public float closeDistance = 15;
+	[SerializeField] private float closeDistance = 15;
 	[Tooltip("The farthest distance where ambience is still audible.")]
-	public float farDistance = 30;
+	[SerializeField] private float farDistance = 30;
 	[Tooltip("Ambience fades in over this time when the scene starts.")]
-	public float fadeInAtStart = 2;
+	[SerializeField] private float fadeInAtStart = 2;
 	[Tooltip("The volume when the camera is within the close distance.")]
-	[Range(0, 1)] public float loudestVolume = 1;
+	[Range(0, 1)] [SerializeField] private float loudestVolume = 1;
 	[Tooltip("How much to blend between 2D and 3D audio. Ambience will seem like it's coming from the position of the audio source if higher.")]
-	[Range(0, 1)] public float directionality = 0.75f;
-	[Range(0, 2)] public float pitch = 1;
-	[Range(0, 1)] public float reverbZoneMix = 0;
-	public GizmoColor gizmoColor = GizmoColor.Blue;
+	[Range(0, 1)] [SerializeField] private float directionality = 0.75f;
+	[Range(0, 2)] [SerializeField] private float pitch = 1;
+	[Range(0, 1)] [SerializeField] private float reverbZoneMix = 0;
+	[SerializeField] private GizmoColor gizmoColor = GizmoColor.Blue;
 	[Tooltip("Set to false to hide gizmos when they're not selected.")]
-	public bool alwaysShowGizmos = true;
+	[SerializeField] private bool alwaysShowGizmos = true;
 
-	private AudioSource audioSource;
+	private AudioSource _audioSource;
 
 	public enum AudioAreaShape {
 		Sphere,
@@ -42,16 +41,14 @@ public class AmbientAudioArea : MonoBehaviour
 
 	private void Start()
 	{
-		audioSource = GetComponent<AudioSource>();
-		if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
-		audioSource.clip = audioClip;
-		audioSource.outputAudioMixerGroup = mixerGroup;
-		audioSource.priority = 200;
-		audioSource.volume = 0;
-		audioSource.pitch = pitch;
-		audioSource.spatialBlend = 0;
-		audioSource.loop = true;
-		audioSource.Play();
+		_audioSource = DumbAudio.Instance.PlayLoopingSound(audioClip);
+		_audioSource.outputAudioMixerGroup = mixerGroup;
+		_audioSource.priority = 200;
+		_audioSource.volume = 0;
+		_audioSource.pitch = pitch;
+		_audioSource.spatialBlend = 0;
+		_audioSource.loop = true;
+		_audioSource.Play();
 		StartCoroutine(FadeInRoutine(fadeInAtStart));
 	}
 
@@ -94,14 +91,14 @@ public class AmbientAudioArea : MonoBehaviour
 		}
 
 		if (distanceNormalized <= 0) {
-			audioSource.volume = 0;
+			_audioSource.volume = 0;
 			return;
 		}
 
-		audioSource.spatialBlend = Mathf.Lerp(directionality, 0, distanceNormalized);
-		audioSource.volume = Mathf.Lerp(0, loudestVolume, distanceNormalized);
-		audioSource.pitch = pitch;
-		audioSource.reverbZoneMix = reverbZoneMix;
+		_audioSource.spatialBlend = Mathf.Lerp(directionality, 0, distanceNormalized);
+		_audioSource.volume = Mathf.Lerp(0, loudestVolume, distanceNormalized);
+		_audioSource.pitch = pitch;
+		_audioSource.reverbZoneMix = reverbZoneMix;
 	}
 
     private void OnValidate()

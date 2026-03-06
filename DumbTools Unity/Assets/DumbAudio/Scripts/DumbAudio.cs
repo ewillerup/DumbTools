@@ -9,17 +9,31 @@ public class DumbAudio : MonoBehaviour
     private readonly HashSet<AudioSource> _activeSources = new HashSet<AudioSource>();
 
 #region lifecycle and Singleton
-    public static DumbAudio Instance { get; private set; }
+    private static DumbAudio _instance;
+    public static DumbAudio Instance
+    {
+        get {
+            if (_instance == null) {
+                _instance = FindAnyObjectByType<DumbAudio>();
+                if (_instance == null) {
+                    var go = new GameObject("DumbAudio");
+                    _instance = go.AddComponent<DumbAudio>();
+                    DontDestroyOnLoad(go);
+                }
+            }
+            return _instance;
+        }
+    }
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(this.gameObject);
-            return;
+        if (_instance == null) {
+            _instance = this;
+            DontDestroyOnLoad(gameObject);
         }
-        Instance = this;
-        DontDestroyOnLoad(this.gameObject);
+        else if (_instance != this)  {
+            Destroy(gameObject);
+        }
     }
 
     private void OnEnable()
